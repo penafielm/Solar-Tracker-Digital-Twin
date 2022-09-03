@@ -12,6 +12,7 @@ For the project we have developed the next described system with 4xESP32 boards 
 
 Moreover, the data modelling python scripts could be found in the same repository. Next SDL scheme is representing in "blank processes" the arduino codes that are generating the data that are used for the data models "light blue processes":
 
+
 ![image](https://user-images.githubusercontent.com/105513457/188284816-84d20711-1804-41e8-ab97-75464c3cdbe7.png)
 
 
