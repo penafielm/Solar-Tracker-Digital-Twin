@@ -1,4 +1,4 @@
-# Solar-Tracker-Digital-Twin
+# Solar Tracker Digital Twin
 Master thesis final project: Enhance Photovoltaic energy efficiency with Solar Tracker Digital Twin
 
 This repository contains the codes used for the Master thesis final project of the Industry 4.0 master degree in the UPC university of Catalunya. https://www.talent.upc.edu/ing/estudis/formacio/curs/202500/master-industria-40/
