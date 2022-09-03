@@ -5,9 +5,9 @@ This repository contains the codes used for the Master thesis final project of t
 
 For the project we have developed the next described system with 4xESP32 boards which arduino codes are in this repository:
 
-![image](https://user-images.githubusercontent.com/105513457/188283748-8cbe3681-6468-48f4-92e9-044b8a36ddeb.png)
+![image](https://user-images.githubusercontent.com/105513457/188284631-ec63ac64-03ed-4bcf-b602-40316dc4486e.png)
 
-![image](https://user-images.githubusercontent.com/105513457/188283767-4e5ed5a1-8fed-40f2-897d-d6324d433b36.png)
+![image](https://user-images.githubusercontent.com/105513457/188284637-0c553d49-5867-4482-a669-fef6aaf2d805.png)
 
 
 Moreover, the data modelling python scripts could be found in the same repository:
