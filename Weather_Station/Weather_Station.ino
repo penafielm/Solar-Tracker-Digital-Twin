@@ -1,4 +1,3 @@
-
 // https://github.com/penafielm/Solar-Tracker-Digital-Twin
 // 
 //
@@ -65,8 +64,8 @@ void vJson() {
   Serial.print("altura: ");
   Serial.println(((float)nAx100_bme(SEALEVELPRESSURE_HPA)/100.00));*/
   json_IoT["wind"] = (float) calcWind ()/100.00;
-  Serial.print("wind: ");
-  Serial.println(json_IoT["wind"]);
+  //Serial.print("wind: ");
+  //Serial.println(json_IoT["wind"]);
   
 }
 
@@ -126,6 +125,7 @@ void receivedCallback(char* topic, byte* payload, unsigned int length) {
 
 void mqttconnect() {
   /* Loop until reconnected */
+  int n = 0;
   while (!client.connected()) {
     Serial.print("MQTT connecting ...");
     /* client ID */
@@ -144,6 +144,15 @@ void mqttconnect() {
       Serial.println("try again in 5 seconds");
       /* Wait 5 seconds before retrying */
       delay(5000);
+      n++;
+      Serial.print("trial");
+      Serial.println(n);
+    }
+    if (n>5){
+      Serial.println("Reconnecting to WiFi...");
+      WiFi.disconnect();
+      WiFi.reconnect();
+      n=0;
     }
   }
 }
@@ -158,38 +167,60 @@ void vSetupMqtt() {
   client.setCallback(receivedCallback);
 }
 
-int wind = 0;
+int wind = 50;
 
 unsigned long firstMillis = 0;                                       //Timers for the wind speed calculation
 unsigned long lastMillis = 0;
 unsigned long lastIntTime = 0;
-int counter = 0;                                                     //Counter to keep track of the number of wind speed revolutions 
+int counter = 0;                                                     //Counter to keep track of the number of wind speed revolutions                                                    
+int restar = 0;
 
 void IRAM_ATTR isr () {                                             //Interrupt routine, run with each reed switch interrupt
 
   unsigned long intTime = millis();
   if(intTime - lastIntTime > 150) {                                 //Debounce the reed switch input
-    if (counter == 0){
+    if (restar == 0){
       firstMillis = millis();
+      counter = 0;
+      restar = 1;
     }
     counter++;                                                       //Count each revolution
     lastMillis = millis();  
   }
   lastIntTime = intTime;                                             //Capture the first and last revolution time
+ 
 }
 
 
 int calcWind () {                                               //Function to calculate the wind speed
   int ave = 5000;
-  if(counter != 0){
-    ave = (lastMillis - firstMillis)/counter;   
-  }
-  Serial.println(counter);
-  Serial.print("Average Tick Time: ");
-  Serial.println(ave);
- 
-  int wind = (((2*3.14159*1000)/ave)*0.01)*1000;              //radius magnet to center is 10mm
+  int currentTime=millis();
   
+  if (restar == 1 ){
+    ave = (lastMillis - firstMillis)/counter;        
+  } 
+
+  if ((currentTime-lastMillis) > 900000){                           //after 15min without moving reset to 0
+    wind = 0;
+    restar = 0;
+  } else{
+    wind = (((2*3.14159*1000)/ave)*0.01)*1000;     //radius magnet to center is 10mm
+    if (wind>1000){
+      wind=0;
+    }
+  }
+
+
+    
+  /*Serial.print("restar  ");
+  Serial.println(restar);
+  Serial.print(" counter ");
+  Serial.println(counter);
+  Serial.print("Average : ");
+  Serial.println(ave);
+  Serial.print("Average Tick Time: ");
+  Serial.println((lastMillis - firstMillis));*/
+   
   return wind; 
 }
 
@@ -234,6 +265,7 @@ unsigned long currentMillis = millis();
     /* if client was disconnected then try to reconnect again */
     if (!client.connected()) {
       mqttconnect();
+      
     }else{
       /* this function will listen for incomming
         subscribed topic-process-invoke receivedCallback */
