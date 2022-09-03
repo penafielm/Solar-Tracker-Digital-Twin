@@ -12,5 +12,6 @@ For the project we have developed the next described system with 4xESP32 boards 
 
 Moreover, the data modelling python scripts could be found in the same repository:
 
-![image](https://user-images.githubusercontent.com/105513457/188283986-80d5bb03-44d3-4d12-9e48-b02adecb8da2.png)
+![image](https://user-images.githubusercontent.com/105513457/188284816-84d20711-1804-41e8-ab97-75464c3cdbe7.png)
+
 
