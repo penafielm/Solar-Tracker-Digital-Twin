@@ -3,7 +3,7 @@ Master thesis final project: Enhance Photovoltaic energy efficiency with Solar T
 
 This repository contains the codes used for the Master thesis final project of the Industry 4.0 master degree in the UPC university of Catalunya. https://www.talent.upc.edu/ing/estudis/formacio/curs/202500/master-industria-40/
 
-For the project we have developed the next describied system with 4xESP32 boards which arduino codes are in this repository:
+For the project we have developed the next described system with 4xESP32 boards which arduino codes are in this repository:
 
 ![image](https://user-images.githubusercontent.com/105513457/188283748-8cbe3681-6468-48f4-92e9-044b8a36ddeb.png)
 
