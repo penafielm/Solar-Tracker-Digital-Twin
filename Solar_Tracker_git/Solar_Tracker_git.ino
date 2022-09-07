@@ -79,9 +79,9 @@ Servo servo_horizontal;
 Servo servo_vertical;
 
 const int LOWER_LIMIT_POS_H=0;  //Límite superior de los servos Horizontal
-const int UPPER_LIMIT_POS_H=180;   //Límite inferior de los servos Horizontal
+const int UPPER_LIMIT_POS_H=185;   //Límite inferior de los servos Horizontal
 const int LOWER_LIMIT_POS_V=0;  //Límite superior de los servos Vertical
-const int UPPER_LIMIT_POS_V=90;   //Límite inferior de los servos Vertical
+const int UPPER_LIMIT_POS_V=95;   //Límite inferior de los servos Vertical
 int pos_sh;
 int pos_sv;
 float shuntvoltage = 0;
@@ -253,7 +253,7 @@ void setup() {
 
   servo_vertical.attach(SERVO_V);
   servo_horizontal.attach(SERVO_H);
-  int originPosH = 90;
+  int originPosH = 180;
   int originPosV =(LOWER_LIMIT_POS_V+UPPER_LIMIT_POS_V)/2;
 
   //Serial.println("move home: ");
@@ -298,7 +298,7 @@ void loop() {
     //Movemos el solar tracker
     moveSolarTracker(average_top, average_bottom, average_left, average_right);
   } else {
-    int originPosH = 90;
+    int originPosH = 180;
     int originPosV = (LOWER_LIMIT_POS_V+UPPER_LIMIT_POS_V)/2;
 
     //Serial.println("move home: ");
@@ -318,21 +318,21 @@ void loop() {
 void moveSolarTracker(int average_top, int average_bottom, int average_left, int average_right) {
   //Movemos el solar tracker hacia arriba o hacia abajo
   
-  if (((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv <= UPPER_LIMIT_POS_V) ||((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv >= LOWER_LIMIT_POS_V)) {
+  if (((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv < UPPER_LIMIT_POS_V) ||((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv > LOWER_LIMIT_POS_V)) {
     pos_sv--;
     servo_vertical.write(pos_sv);
   }
-  else if (((average_bottom - average_top ) > LIGHT_THRESHOLD && pos_sv <= UPPER_LIMIT_POS_V) ||((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv >= LOWER_LIMIT_POS_V)) {
+  else if (((average_bottom - average_top ) > LIGHT_THRESHOLD && pos_sv < UPPER_LIMIT_POS_V) ||((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv > LOWER_LIMIT_POS_V)) {
     pos_sv++;
     servo_vertical.write(pos_sv);
   }
 
   //Movemos el solar tracker hacia la derecha o hacia la izquierda
-  if (((average_left - average_right) > LIGHT_THRESHOLD && pos_sh <= UPPER_LIMIT_POS_H) || ((average_left - average_right) > LIGHT_THRESHOLD && pos_sh >= LOWER_LIMIT_POS_H)) {
+  if (((average_left - average_right) > LIGHT_THRESHOLD && pos_sh < UPPER_LIMIT_POS_H) || ((average_left - average_right) > LIGHT_THRESHOLD && pos_sh > LOWER_LIMIT_POS_H)) {
     pos_sh++;
     servo_horizontal.write(pos_sh);
   }
-  else if (((average_right - average_left ) > LIGHT_THRESHOLD && pos_sh <= UPPER_LIMIT_POS_H) || ((average_left - average_right) > LIGHT_THRESHOLD && pos_sh >= LOWER_LIMIT_POS_H)) {
+  else if (((average_right - average_left ) > LIGHT_THRESHOLD && pos_sh < UPPER_LIMIT_POS_H) || ((average_left - average_right) > LIGHT_THRESHOLD && pos_sh > LOWER_LIMIT_POS_H)) {
     pos_sh--;
     servo_horizontal.write(pos_sh);
   }
