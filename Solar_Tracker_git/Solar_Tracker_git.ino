@@ -6,7 +6,6 @@
 // things.cat
 //
 
-
 #include "PCF8574.h" // https://github.com/RobTillaart/Arduino/tree/master/libraries/PCF8574
 // #ifdef XIP_U14
 
@@ -31,7 +30,18 @@
 #include <PubSubClient.h>
 #include <ESPmDNS.h>
 #include <Arduino_JSON.h>
+#include <NTPClient.h>
+#include <ESP32Time.h>
+#include <WiFiUdp.h>
 
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+const long utcOffsetInSeconds = 7200;
+NTPClient timeClient(ntpUDP,"pool.ntp.org", utcOffsetInSeconds);
+
+// Variables to save date and time
+String formattedDate;
+String today;
 
 /* create an instance of WiFiClientSecure */
 //WiFiClientSecure espClient;
@@ -47,14 +57,6 @@ JSONVar json_IoT;
 #include <ESP32Time.h>
 #include <NTPClient.h>
 ESP32Time rtc(0);  // offset in seconds GMT+2
-// Define NTP Client to get time
-WiFiUDP ntpUDP;
-const long utcOffsetInSeconds = 7200;
-NTPClient timeClient(ntpUDP,"pool.ntp.org", utcOffsetInSeconds);
-// Variables to save date and time
-String formattedDate;
-
-
 
 #include <Servo.h>
 #include <Wire.h>
@@ -67,8 +69,8 @@ Adafruit_INA219 ina219;
 //LDRs
 #define LDR_TOP_LEFT 35
 #define LDR_TOP_RIGHT 34
-#define LDR_BOTTOM_LEFT 33
-#define LDR_BOTTOM_RIGHT 32
+#define LDR_BOTTOM_LEFT 32
+#define LDR_BOTTOM_RIGHT 33
 
 const int LIGHT_THRESHOLD = 25;
 
@@ -96,6 +98,9 @@ int ldr_tl_value;
 int ldr_tr_value;
 int ldr_bl_value;
 int ldr_br_value;
+int diffV;
+int diffH;
+
 
 
 void vJson() {
@@ -246,15 +251,29 @@ void setup() {
   Serial.println(WiFi.localIP());
   Serial.println("MAC address: ");
   Serial.println(sMac);
+ // Initialize a NTPClient to get time
+  timeClient.begin();
+  delay ( 500 );
+  timeClient.update();
+  // Set offset time in seconds to adjust for your timezone, for example:
+  // GMT +1 = 3600
+  // GMT +8 = 28800
+  // GMT -1 = -3600
+  // GMT 0 = 0
+  formattedDate = timeClient.getFormattedDate();
+  Serial.println(formattedDate);
+  //rtc.setTime(00, 59, 1, 17, 1, 2021);// sec , min, hour, day, month, year
+  rtc.setTime(timeClient.getEpochTime());//epoch time
+  Serial.println("Today: ");
+  Serial.println(rtc.getDate(true));
 
-  
   vSetupMqtt();
   
 
   servo_vertical.attach(SERVO_V);
   servo_horizontal.attach(SERVO_H);
-  int originPosH = 180;
-  int originPosV =(LOWER_LIMIT_POS_V+UPPER_LIMIT_POS_V)/2;
+  int originPosH = 170;
+  int originPosV = (LOWER_LIMIT_POS_V+UPPER_LIMIT_POS_V)/2;
 
   //Serial.println("move home: ");
   servo_horizontal.write(originPosH);
@@ -273,11 +292,41 @@ void setup() {
     while (1) { delay(10); }
   }
   Serial.println("Measuring voltage and current with INA219 ...");
+  delay(1000);
+
 }
 
+  
 void loop() {
- 
-   
+
+   unsigned long currentMillis = millis();
+  static unsigned long previousMillis = currentMillis;
+  
+  if((WiFi.status() != WL_CONNECTED) && (currentMillis - previousMillis >=RECONNECTING_INTERVAL)){
+    Serial.print(millis());
+    Serial.println("Reconnecting to WiFi...");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    previousMillis = currentMillis;
+    // Initialize a NTPClient to get time
+    timeClient.begin();
+    delay ( 500 );
+    timeClient.update();
+    rtc.setTime(timeClient.getEpochTime());//epoch time
+    Serial.println("Today reconnected: ");
+    Serial.println(rtc.getDate(true));    
+  }else{
+    /* if client was disconnected then try to reconnect again */
+    if (!client.connected()) {
+      mqttconnect();
+      
+    }else{
+      /* this function will listen for incomming
+        subscribed topic-process-invoke receivedCallback */
+      client.loop();
+    }
+  }
+  today = rtc.getDate(true);
   
   //Leemos los 4 LDRs
   ldr_tl_value = analogRead(LDR_TOP_LEFT);
@@ -290,24 +339,55 @@ void loop() {
   int average_left = (ldr_tl_value + ldr_bl_value) / 2; //Media de los 2 LDR de la izquierda
   int average_right = (ldr_tr_value + ldr_br_value) / 2; //Media de los 2 LDR de la derecha
 
+
   int minLDR = min(min(ldr_tl_value,ldr_tr_value),min(ldr_bl_value,ldr_br_value));
   Serial.print("minLDR ");
   Serial.println(minLDR);
 
-  if(minLDR<5000){
+  if(minLDR<150) {
     //Movemos el solar tracker
     moveSolarTracker(average_top, average_bottom, average_left, average_right);
-  } else {
-    int originPosH = 180;
+    
+  } else if (minLDR>150 && rtc.getDate(true)==today){
+    opt_pos_H = pos_sh;
+    opt_pos_V = pos_sv;
+    currentMeasure();
+    vJson();
+    Serial.print("Optimal Position Horizontal ");
+    Serial.println(opt_pos_H);
+       
+    Serial.print("Optimal Position Vertical ");
+    Serial.println(opt_pos_V);
+   
+    Serial.print("LED TOP LEFT: ");
+    Serial.println(((float)ldr_tl_value));
+   
+    Serial.print("LED TOP RIGHT: ");
+    Serial.println(((float)ldr_tr_value));
+    
+    Serial.print("LED BOTTOM LEFT: ");
+    Serial.println(((float)ldr_bl_value));
+    
+    Serial.print("LED BOTTOM RIGHT: ");
+    Serial.println(((float)ldr_br_value));
+  }
+    else if (minLDR>150 && rtc.getDate(true)!=today){
+      
+    int originPosH = 170;
     int originPosV = (LOWER_LIMIT_POS_V+UPPER_LIMIT_POS_V)/2;
 
-    //Serial.println("move home: ");
+    Serial.println("move home: ");
     servo_horizontal.write(originPosH);
     servo_vertical.write(originPosV);
     pos_sv = servo_vertical.read();
     pos_sh = servo_horizontal.read();
-  }
-
+    opt_pos_H = pos_sh;
+    opt_pos_V = pos_sv;
+    currentMeasure();
+    vJson();
+  
+    }
+  
 
   
 
@@ -317,29 +397,42 @@ void loop() {
 
 void moveSolarTracker(int average_top, int average_bottom, int average_left, int average_right) {
   //Movemos el solar tracker hacia arriba o hacia abajo
-  
+
+
+      
   if (((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv < UPPER_LIMIT_POS_V) ||((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv > LOWER_LIMIT_POS_V)) {
     pos_sv--;
     servo_vertical.write(pos_sv);
+
+
+    
   }
   else if (((average_bottom - average_top ) > LIGHT_THRESHOLD && pos_sv < UPPER_LIMIT_POS_V) ||((average_top - average_bottom) > LIGHT_THRESHOLD && pos_sv > LOWER_LIMIT_POS_V)) {
     pos_sv++;
     servo_vertical.write(pos_sv);
+
+
+
   }
 
   //Movemos el solar tracker hacia la derecha o hacia la izquierda
   if (((average_left - average_right) > LIGHT_THRESHOLD && pos_sh < UPPER_LIMIT_POS_H) || ((average_left - average_right) > LIGHT_THRESHOLD && pos_sh > LOWER_LIMIT_POS_H)) {
     pos_sh++;
     servo_horizontal.write(pos_sh);
+ 
+
   }
   else if (((average_right - average_left ) > LIGHT_THRESHOLD && pos_sh < UPPER_LIMIT_POS_H) || ((average_left - average_right) > LIGHT_THRESHOLD && pos_sh > LOWER_LIMIT_POS_H)) {
     pos_sh--;
     servo_horizontal.write(pos_sh);
+   
   }
     Serial.print("HORIZONTAL ");
     Serial.println(average_left-average_right);
     Serial.print("VERTICAL ");
     Serial.println(average_top-average_bottom);
+
+    
   
   if(abs(average_right - average_left)<LIGHT_THRESHOLD && abs(average_top - average_bottom)<LIGHT_THRESHOLD ){
     opt_pos_H = pos_sh;
