@@ -80,10 +80,10 @@ const int LIGHT_THRESHOLD = 25;
 Servo servo_horizontal;
 Servo servo_vertical;
 
-const int LOWER_LIMIT_POS_H=0;  //Límite superior de los servos Horizontal
-const int UPPER_LIMIT_POS_H=185;   //Límite inferior de los servos Horizontal
-const int LOWER_LIMIT_POS_V=0;  //Límite superior de los servos Vertical
-const int UPPER_LIMIT_POS_V=95;   //Límite inferior de los servos Vertical
+const int LOWER_LIMIT_POS_H=2;  //Límite superior de los servos Horizontal
+const int UPPER_LIMIT_POS_H=178;   //Límite inferior de los servos Horizontal
+const int LOWER_LIMIT_POS_V=2;  //Límite superior de los servos Vertical
+const int UPPER_LIMIT_POS_V=88;   //Límite inferior de los servos Vertical
 int pos_sh;
 int pos_sv;
 float shuntvoltage = 0;
@@ -264,15 +264,17 @@ void setup() {
   Serial.println(formattedDate);
   //rtc.setTime(00, 59, 1, 17, 1, 2021);// sec , min, hour, day, month, year
   rtc.setTime(timeClient.getEpochTime());//epoch time
+  today = rtc.getDate(true);
   Serial.println("Today: ");
-  Serial.println(rtc.getDate(true));
+  Serial.println(today);
+  
 
   vSetupMqtt();
   
 
   servo_vertical.attach(SERVO_V);
   servo_horizontal.attach(SERVO_H);
-  int originPosH = 170;
+  int originPosH = 175;
   int originPosV = (LOWER_LIMIT_POS_V+UPPER_LIMIT_POS_V)/2;
 
   //Serial.println("move home: ");
@@ -326,7 +328,7 @@ void loop() {
       client.loop();
     }
   }
-  today = rtc.getDate(true);
+  
   
   //Leemos los 4 LDRs
   ldr_tl_value = analogRead(LDR_TOP_LEFT);
@@ -370,6 +372,9 @@ void loop() {
     
     Serial.print("LED BOTTOM RIGHT: ");
     Serial.println(((float)ldr_br_value));
+    Serial.println("Today: ");
+    Serial.println(today);
+  
   }
     else if (minLDR>150 && rtc.getDate(true)!=today){
       
@@ -385,6 +390,10 @@ void loop() {
     opt_pos_V = pos_sv;
     currentMeasure();
     vJson();
+    today = rtc.getDate(true);
+    Serial.println("Today change: ");
+    Serial.println(today);
+    
   
     }
   
