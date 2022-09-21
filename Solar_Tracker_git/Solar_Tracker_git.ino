@@ -351,30 +351,34 @@ void loop() {
     moveSolarTracker(average_top, average_bottom, average_left, average_right);
     
   } else if (minLDR>150 && rtc.getDate(true)==today){
-    opt_pos_H = pos_sh;
-    opt_pos_V = pos_sv;
-    currentMeasure();
-    vJson();
-    Serial.print("Optimal Position Horizontal ");
-    Serial.println(opt_pos_H);
-       
-    Serial.print("Optimal Position Vertical ");
-    Serial.println(opt_pos_V);
-   
-    Serial.print("LED TOP LEFT: ");
-    Serial.println(((float)ldr_tl_value));
-   
-    Serial.print("LED TOP RIGHT: ");
-    Serial.println(((float)ldr_tr_value));
     
-    Serial.print("LED BOTTOM LEFT: ");
-    Serial.println(((float)ldr_bl_value));
-    
-    Serial.print("LED BOTTOM RIGHT: ");
-    Serial.println(((float)ldr_br_value));
-    Serial.println("Today: ");
-    Serial.println(today);
-  
+    if(pos_sh < LOWER_LIMIT_POS_H || pos_sh > UPPER_LIMIT_POS_H || pos_sv < LOWER_LIMIT_POS_V || pos_sv > UPPER_LIMIT_POS_V){
+      moveSolarTracker(average_top, average_bottom, average_left, average_right);
+    } else {
+      opt_pos_H = pos_sh;
+      opt_pos_V = pos_sv;
+      currentMeasure();
+      vJson();
+      Serial.print("Optimal Position Horizontal ");
+      Serial.println(opt_pos_H);
+         
+      Serial.print("Optimal Position Vertical ");
+      Serial.println(opt_pos_V);
+     
+      Serial.print("LED TOP LEFT: ");
+      Serial.println(((float)ldr_tl_value));
+     
+      Serial.print("LED TOP RIGHT: ");
+      Serial.println(((float)ldr_tr_value));
+      
+      Serial.print("LED BOTTOM LEFT: ");
+      Serial.println(((float)ldr_bl_value));
+      
+      Serial.print("LED BOTTOM RIGHT: ");
+      Serial.println(((float)ldr_br_value));
+      Serial.println("Today: ");
+      Serial.println(today);
+    }
   }
     else if (minLDR>150 && rtc.getDate(true)!=today){
       
@@ -472,6 +476,7 @@ void moveSolarTracker(int average_top, int average_bottom, int average_left, int
   if(pos_sh < LOWER_LIMIT_POS_H || pos_sh > UPPER_LIMIT_POS_H || pos_sv < LOWER_LIMIT_POS_V || pos_sv > UPPER_LIMIT_POS_V){
     int originPosH = 170;
     int originPosV = (LOWER_LIMIT_POS_V+UPPER_LIMIT_POS_V)/2;
+    Serial.println("deviation better move home ");
   }
 
 
