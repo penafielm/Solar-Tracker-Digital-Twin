@@ -83,7 +83,7 @@ Servo servo_vertical;
 const int LOWER_LIMIT_POS_H=2;  //Límite superior de los servos Horizontal
 const int UPPER_LIMIT_POS_H=178;   //Límite inferior de los servos Horizontal
 const int LOWER_LIMIT_POS_V=2;  //Límite superior de los servos Vertical
-const int UPPER_LIMIT_POS_V=88;   //Límite inferior de los servos Vertical
+const int UPPER_LIMIT_POS_V=90;   //Límite inferior de los servos Vertical
 int pos_sh;
 int pos_sv;
 float shuntvoltage = 0;
@@ -467,6 +467,11 @@ void moveSolarTracker(int average_top, int average_bottom, int average_left, int
     Serial.println(((float)ldr_br_value));
     
     
+  }
+
+  if(pos_sh < LOWER_LIMIT_POS_H || pos_sh > UPPER_LIMIT_POS_H || pos_sv < LOWER_LIMIT_POS_V || pos_sv > UPPER_LIMIT_POS_V){
+    int originPosH = 170;
+    int originPosV = (LOWER_LIMIT_POS_V+UPPER_LIMIT_POS_V)/2;
   }
 
 
